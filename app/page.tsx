@@ -1,5 +1,6 @@
 'use client';
 
+import { PageLoader } from '@/components/page-loader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,12 +25,13 @@ import {
   X,
 } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 export default function Portfolio() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isVisible, setIsVisible] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (isDarkMode) {
@@ -39,8 +41,44 @@ export default function Portfolio() {
     }
   }, [isDarkMode]);
 
+  useEffect(() => {
+    // 監聽滾動事件來觸發動畫
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -100px 0px',
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setIsVisible((prev) => ({
+            ...prev,
+            [entry.target.id]: true,
+          }));
+        }
+      });
+    }, observerOptions);
+
+    // 觀察所有section
+    const sections = document.querySelectorAll('section[id]');
+    sections.forEach((section) => observer.observe(section));
+
+    return () => observer.disconnect();
+  }, [isLoading]);
+
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
+  };
+
+  const smoothScrollTo = (elementId: string) => {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
+    setIsMobileMenuOpen(false);
   };
 
   const skills = [
@@ -88,55 +126,59 @@ export default function Portfolio() {
     },
   ];
 
+  if (isLoading) {
+    return <PageLoader onLoadingComplete={() => setIsLoading(false)} />;
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-background/80 backdrop-blur-md border-b z-50">
+      <nav className="fixed top-0 w-full bg-background/80 backdrop-blur-md border-b z-50 animate-fade-in-down">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="text-xl font-bold gradient-text">
                 Leonard Lai
               </span>
             </div>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
-              <Link
-                href="#home"
+              <button
+                onClick={() => smoothScrollTo('home')}
                 className="text-sm font-medium hover:text-primary transition-colors"
               >
                 首頁
-              </Link>
-              <Link
-                href="#about"
+              </button>
+              <button
+                onClick={() => smoothScrollTo('about')}
                 className="text-sm font-medium hover:text-primary transition-colors"
               >
                 關於我
-              </Link>
-              <Link
-                href="#skills"
+              </button>
+              <button
+                onClick={() => smoothScrollTo('skills')}
                 className="text-sm font-medium hover:text-primary transition-colors"
               >
                 技能
-              </Link>
-              <Link
-                href="#projects"
+              </button>
+              <button
+                onClick={() => smoothScrollTo('projects')}
                 className="text-sm font-medium hover:text-primary transition-colors"
               >
                 作品
-              </Link>
-              <Link
-                href="#contact"
+              </button>
+              <button
+                onClick={() => smoothScrollTo('contact')}
                 className="text-sm font-medium hover:text-primary transition-colors"
               >
                 聯絡
-              </Link>
+              </button>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={toggleDarkMode}
-                className="ml-4"
+                className="ml-4 hover-lift"
               >
                 {isDarkMode ? (
                   <Sun className="h-5 w-5" />
@@ -171,38 +213,38 @@ export default function Portfolio() {
 
           {/* Mobile Navigation */}
           {isMobileMenuOpen && (
-            <div className="md:hidden">
+            <div className="md:hidden animate-fade-in">
               <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-background border-t">
-                <Link
-                  href="#home"
-                  className="block px-3 py-2 text-sm font-medium hover:text-primary transition-colors"
+                <button
+                  onClick={() => smoothScrollTo('home')}
+                  className="block w-full text-left px-3 py-2 text-sm font-medium hover:text-primary transition-colors"
                 >
                   首頁
-                </Link>
-                <Link
-                  href="#about"
-                  className="block px-3 py-2 text-sm font-medium hover:text-primary transition-colors"
+                </button>
+                <button
+                  onClick={() => smoothScrollTo('about')}
+                  className="block w-full text-left px-3 py-2 text-sm font-medium hover:text-primary transition-colors"
                 >
                   關於我
-                </Link>
-                <Link
-                  href="#skills"
-                  className="block px-3 py-2 text-sm font-medium hover:text-primary transition-colors"
+                </button>
+                <button
+                  onClick={() => smoothScrollTo('skills')}
+                  className="block w-full text-left px-3 py-2 text-sm font-medium hover:text-primary transition-colors"
                 >
                   技能
-                </Link>
-                <Link
-                  href="#projects"
-                  className="block px-3 py-2 text-sm font-medium hover:text-primary transition-colors"
+                </button>
+                <button
+                  onClick={() => smoothScrollTo('projects')}
+                  className="block w-full text-left px-3 py-2 text-sm font-medium hover:text-primary transition-colors"
                 >
                   作品
-                </Link>
-                <Link
-                  href="#contact"
-                  className="block px-3 py-2 text-sm font-medium hover:text-primary transition-colors"
+                </button>
+                <button
+                  onClick={() => smoothScrollTo('contact')}
+                  className="block w-full text-left px-3 py-2 text-sm font-medium hover:text-primary transition-colors"
                 >
                   聯絡
-                </Link>
+                </button>
               </div>
             </div>
           )}
@@ -212,42 +254,56 @@ export default function Portfolio() {
       {/* Hero Section */}
       <section
         id="home"
-        className="pt-16 min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20"
+        className={`pt-16 min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 ${
+          isVisible.home ? 'animate-fade-in' : 'opacity-0'
+        }`}
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="max-w-4xl mx-auto">
-            <div className="mb-8">
-              <div className="w-32 h-32 mx-auto mb-6 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
+            <div className="mb-8 animate-fade-in-up">
+              <div className="w-32 h-32 mx-auto mb-6 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center hover-lift">
                 <span className="text-4xl font-bold text-white">L</span>
               </div>
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Leonard Lai
-              </span>
+            <h1
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in-up"
+              style={{ animationDelay: '0.2s' }}
+            >
+              <span className="gradient-text">Leonard Lai</span>
             </h1>
-            <p className="text-xl sm:text-2xl text-muted-foreground mb-8">
+            <p
+              className="text-xl sm:text-2xl text-muted-foreground mb-8 animate-fade-in-up"
+              style={{ animationDelay: '0.4s' }}
+            >
               後端工程師 | Java 專家
             </p>
-            <p className="text-lg text-muted-foreground mb-12 max-w-2xl mx-auto">
+            <p
+              className="text-lg text-muted-foreground mb-12 max-w-2xl mx-auto animate-fade-in-up"
+              style={{ animationDelay: '0.6s' }}
+            >
               專精於 Java
               後端開發，擁有豐富的企業級系統開發經驗，致力於構建高效、可擴展的軟體解決方案
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div
+              className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up"
+              style={{ animationDelay: '0.8s' }}
+            >
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover-lift"
+                onClick={() => smoothScrollTo('projects')}
               >
-                <Link href="#projects" className="flex items-center">
-                  查看作品
-                  <ExternalLink className="ml-2 h-4 w-4" />
-                </Link>
+                查看作品
+                <ExternalLink className="ml-2 h-4 w-4" />
               </Button>
-              <Button size="lg" variant="outline">
-                <Link href="#contact" className="flex items-center">
-                  聯絡我
-                  <Mail className="ml-2 h-4 w-4" />
-                </Link>
+              <Button
+                size="lg"
+                variant="outline"
+                className="hover-lift"
+                onClick={() => smoothScrollTo('contact')}
+              >
+                聯絡我
+                <Mail className="ml-2 h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -255,21 +311,26 @@ export default function Portfolio() {
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-20 bg-background">
+      <section
+        id="about"
+        className={`py-20 bg-background ${
+          isVisible.about ? 'animate-fade-in' : 'opacity-0'
+        }`}
+      >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12 animate-fade-in-up">
               關於我
             </h2>
             <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div>
-                <div className="w-full h-80 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg flex items-center justify-center">
+              <div className="animate-slide-in-left">
+                <div className="w-full h-80 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg flex items-center justify-center hover-lift">
                   <div className="w-48 h-48 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
                     <span className="text-6xl font-bold text-white">L</span>
                   </div>
                 </div>
               </div>
-              <div className="space-y-6">
+              <div className="space-y-6 animate-slide-in-right">
                 <h3 className="text-2xl font-semibold">
                   後端工程師 & Java 專家
                 </h3>
@@ -284,11 +345,21 @@ export default function Portfolio() {
                   設計和資料庫優化方面有豐富經驗。
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">Java</Badge>
-                  <Badge variant="secondary">Spring Boot</Badge>
-                  <Badge variant="secondary">微服務架構</Badge>
-                  <Badge variant="secondary">資料庫設計</Badge>
-                  <Badge variant="secondary">API 開發</Badge>
+                  <Badge variant="secondary" className="hover-lift">
+                    Java
+                  </Badge>
+                  <Badge variant="secondary" className="hover-lift">
+                    Spring Boot
+                  </Badge>
+                  <Badge variant="secondary" className="hover-lift">
+                    微服務架構
+                  </Badge>
+                  <Badge variant="secondary" className="hover-lift">
+                    資料庫設計
+                  </Badge>
+                  <Badge variant="secondary" className="hover-lift">
+                    API 開發
+                  </Badge>
                 </div>
               </div>
             </div>
@@ -297,15 +368,24 @@ export default function Portfolio() {
       </section>
 
       {/* Skills Section */}
-      <section id="skills" className="py-20 bg-muted/50">
+      <section
+        id="skills"
+        className={`py-20 bg-muted/50 ${
+          isVisible.skills ? 'animate-fade-in' : 'opacity-0'
+        }`}
+      >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12 animate-fade-in-up">
               技能專長
             </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {skills.map((skill, index) => (
-                <Card key={index} className="hover:shadow-lg transition-shadow">
+                <Card
+                  key={index}
+                  className="hover:shadow-lg transition-all duration-300 hover-lift animate-fade-in-up"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
                   <CardContent className="p-6">
                     <div className="flex items-center mb-4">
                       <div className="p-2 bg-primary/10 rounded-lg mr-3">
@@ -334,17 +414,23 @@ export default function Portfolio() {
       </section>
 
       {/* Projects Section */}
-      <section id="projects" className="py-20 bg-background">
+      <section
+        id="projects"
+        className={`py-20 bg-background ${
+          isVisible.projects ? 'animate-fade-in' : 'opacity-0'
+        }`}
+      >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12 animate-fade-in-up">
               專案作品
             </h2>
             <div className="grid md:grid-cols-2 gap-8">
               {projects.map((project, index) => (
                 <Card
                   key={index}
-                  className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                  className="hover:shadow-xl transition-all duration-300 hover-lift animate-fade-in-up"
+                  style={{ animationDelay: `${index * 0.2}s` }}
                 >
                   <div className="relative overflow-hidden rounded-t-lg">
                     <Image
@@ -352,7 +438,7 @@ export default function Portfolio() {
                       alt={project.title}
                       width={400}
                       height={200}
-                      className="w-full h-48 object-cover"
+                      className="w-full h-48 object-cover transition-transform duration-300 hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   </div>
@@ -378,7 +464,11 @@ export default function Portfolio() {
                       <h4 className="font-semibold mb-2">技術棧：</h4>
                       <div className="flex flex-wrap gap-2">
                         {project.tech.map((tech, techIndex) => (
-                          <Badge key={techIndex} variant="outline">
+                          <Badge
+                            key={techIndex}
+                            variant="outline"
+                            className="hover-lift"
+                          >
                             {tech}
                           </Badge>
                         ))}
@@ -395,16 +485,26 @@ export default function Portfolio() {
       {/* Contact Section */}
       <section
         id="contact"
-        className="py-20 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20"
+        className={`py-20 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 ${
+          isVisible.contact ? 'animate-fade-in' : 'opacity-0'
+        }`}
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-8">聯絡我</h2>
-            <p className="text-lg text-muted-foreground mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-8 animate-fade-in-up">
+              聯絡我
+            </h2>
+            <p
+              className="text-lg text-muted-foreground mb-12 animate-fade-in-up"
+              style={{ animationDelay: '0.2s' }}
+            >
               如果您對我的工作感興趣，或有任何合作機會，歡迎與我聯絡
             </p>
 
-            <Card className="max-w-md mx-auto">
+            <Card
+              className="max-w-md mx-auto hover-lift animate-fade-in-up"
+              style={{ animationDelay: '0.4s' }}
+            >
               <CardContent className="p-8">
                 <div className="space-y-6">
                   <div className="flex items-center justify-center space-x-4">
@@ -420,14 +520,22 @@ export default function Portfolio() {
                   </div>
 
                   <div className="flex justify-center space-x-4">
-                    <Button variant="outline" size="icon">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="hover-lift"
+                    >
                       <Github className="w-5 h-5" />
                     </Button>
-                    <Button variant="outline" size="icon">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="hover-lift"
+                    >
                       <Linkedin className="w-5 h-5" />
                     </Button>
                     <Button
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover-lift"
                       onClick={() =>
                         (window.location.href =
                           'mailto:egroup.leonard@gmail.com')
@@ -448,10 +556,7 @@ export default function Portfolio() {
       <footer className="py-8 bg-background border-t">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center text-muted-foreground">
-            <p>
-              &copy; {new Date().getFullYear()} Leonard Lai. All rights
-              reserved.
-            </p>
+            <p>&copy; 2024 Leonard Lai. 版權所有。</p>
           </div>
         </div>
       </footer>
